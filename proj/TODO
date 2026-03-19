@@ -1,39 +1,35 @@
 # TODO — RulesMCP
 
-## Phase 1: Core Logic + Scaffolding (active)
+## Phase 2: MCP Integration + Bug Fixes (active)
 
-### Core Registry (DONE)
-- [x] Registry_core struct with entries loaded from register.jsonl
-- [x] search() with token-based weighted scoring
-- [x] learning_path() with layer grouping
-- [x] find_by_file(), list_files(), categories()
+### MCP Integration (DONE — 2026-03-19)
+- [x] Custom JSON-RPC stdio server (no external MCP SDK needed yet)
+- [x] Define 7 tools and their input schemas
+- [x] CallToolHandler with proper parameter parsing
+- [x] Test with `cargo run` ✅
 
-### Adapter Layer (DONE)
-- [x] All 7 tool method implementations (help, search_rules, get_rule, etc.)
-- [x] Async-safe with Arc<Mutex<Registry>>
-
-### Repository Management (DONE)
-- [x] ensure_repo() clones Rules from GitHub
-- [x] Cache in ~/.cache/rules-mcp/Rules/
-
-### MCP Integration (TODO)
-- [ ] Integrate rmcp::Server with stdio transport
-- [ ] Define Tool structs for each of 7 tools
-- [ ] Implement CallToolHandler
-- [ ] Test with `cargo run`
+### Critical Bugs Fixed (2026-03-19)
+- [x] Bug 1: Tracing to stdout — added `.with_writer(std::io::stderr)`
+- [x] Bug 2: Shadowing of stdlib core — changed to `use crate::core`
+- [x] Bug 3: Blocking I/O in async — replaced with `tokio::io` async API
+- [x] Bug 4: Notifications get error response — return Option<JsonRpcResponse>, None for notifications
+- [x] Bug 5: No git pull — added git fetch + hard reset on startup
+- [x] Bug 6: get_context filter bug — fixed `|| e.category == "global"` and added topics parameter
+- [x] Bug 7: help() missing stats — added RULE/BANNED marker counting
 
 ### Testing & Publishing (TODO)
-- [ ] Manual test with Claude Code
+- [ ] Verify server with full MCP test suite
 - [ ] Push to GitHub (lpmwfx/RulesMCP)
-- [ ] Publish to crates.io
-- [ ] Update mcp-servers.json to use Rust rules-mcp.exe
+- [ ] Install via `cargo install --git https://github.com/lpmwfx/RulesMCP rules-mcp`
+- [ ] Update Claude Code mcp-servers.json config
+- [ ] Uninstall Python rules-mcp (`pip uninstall rules-mcp`)
+- [ ] Verify Claude Code tools work: `mcp__rules__help`, `mcp__rules__search_rules`, etc.
 
 ### Polish (TODO)
-- [ ] Add proj/RULES with Rust CLI rules
-- [ ] Add proj/FIXES for known issues
-- [ ] Add proj/PHASES for release tracking
-- [ ] .gitignore, LICENSE (EUPL-1.2)
+- [ ] Add comprehensive unit tests
+- [ ] Publish to crates.io (optional)
+- [ ] Full documentation
 
 ## Known Issues
 
-None yet.
+None critical. Naming convention warnings (_core, _x suffixes) are intentional per project RULES.

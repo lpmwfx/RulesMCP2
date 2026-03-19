@@ -1,0 +1,100 @@
+#!/usr/bin/env rules-project
+
+# FIXES — RulesMCP Known Issues and Resolutions
+
+## Resolved (Phase 2 — 2026-03-19)
+
+### ✅ Bug 1: Tracing corrupts JSON-RPC
+**Status:** FIXED
+**Cause:** `tracing_subscriber::fmt()` wrote logs to stdout by default
+**Fix:** Added `.with_writer(std::io::stderr)` to route logs to stderr only
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 2: stdlib `core` module shadowing
+**Status:** FIXED
+**Cause:** `use core::Registry_core` conflicted with stdlib `core` crate
+**Fix:** Changed to `use crate::core::Registry_core` (explicit path)
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 3: Blocking I/O in async function
+**Status:** FIXED
+**Cause:** `stdin().lock().read_line()` blocks tokio worker thread
+**Fix:** Migrated to `tokio::io::stdin()` with `AsyncBufReadExt`, async read/write
+**Changes:**
+- Imports: `tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader}`
+- Method: `reader.read_line().await` + `stdout.write_all().await`
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 4: Notifications get error response
+**Status:** FIXED
+**Cause:** All requests returned JsonRpcResponse; notifications (id=None) got error responses
+**Fix:** Changed `handle_request` to return `Option<JsonRpcResponse>`, return None for notifications
+**Logic:** `if req.id.is_none() || req.method.starts_with("notifications/") { return None; }`
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 5: No git pull — stale cache
+**Status:** FIXED
+**Cause:** `ensure_repo()` only cloned once, never fetched updates
+**Fix:** Added git fetch + reset logic:
+```rust
+let mut remote = repo.find_remote("origin")?;
+remote.fetch(&["main"], None, None)?;
+repo.set_head_detached(oid)?;
+repo.checkout_head(Some(CheckoutBuilder::default().force()))?;
+```
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 6: get_context filter bug + missing topics
+**Status:** FIXED
+**Cause:** Filter logic `|| languages.contains(&"global")` returned all rules if "global" in list
+**Fixes:**
+1. Changed to `|| e.category == "global"` (check category, not list membership)
+2. Added `topics: &[&str]` parameter to filter by concepts/tags
+3. Updated server.rs to parse topics from arguments and pass to adapter
+**Commit:** Phase 2 — Bug fixes batch
+
+### ✅ Bug 7: help() missing rule/banned marker counts
+**Status:** FIXED
+**Cause:** help() only showed rule count and categories, not marker statistics
+**Fix:** Added:
+```rust
+let total_rule_markers: usize = registry.entries.iter()
+    .map(|e| e.rules.len())
+    .sum();
+let total_banned_markers: usize = registry.entries.iter()
+    .map(|e| e.banned.len())
+    .sum();
+```
+**Output:** Now shows "1400 RULE markers, 589 BANNED markers" alongside rule/category counts
+**Commit:** Phase 2 — Bug fixes batch
+
+---
+
+## Open / Known Limitations
+
+### Naming Convention Warnings
+**Status:** INTENTIONAL (per proj/RULES)
+**Issue:** Compiler warns about `Registry_core`, `Entry_x`, etc. (not CamelCase)
+**Reason:** Layer-tag suffix convention per `rust/naming.md` — types carry layer suffix
+**Action:** None required (warnings suppressed by design)
+
+### Missing Features (Phase 3)
+- [ ] Optional: Publish to crates.io
+- [ ] Optional: Comprehensive unit test suite
+- [ ] Optional: MCP SDK integration (currently custom JSON-RPC impl)
+
+---
+
+## Testing Notes
+
+All critical fixes verified with manual testing:
+```bash
+# Initialize request (verify async I/O + no logs on stdout)
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | ./target/release/rules-mcp.exe
+
+# Help tool (verify marker counts)
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"help","arguments":{}}}' | ./target/release/rules-mcp.exe
+
+# Notifications (verify no error response — should return immediately)
+echo '{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}' | ./target/release/rules-mcp.exe
+```

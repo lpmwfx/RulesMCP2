@@ -3,7 +3,7 @@
 use crate::adapter::RulesMcpServer;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use std::io::{stdin, stdout, BufRead, Write};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
@@ -31,25 +31,27 @@ pub struct JsonRpcError {
 impl RulesMcpServer {
     /// Run JSON-RPC stdio server loop.
     pub async fn run_stdio(&self) -> Result<()> {
-        let stdin = stdin();
-        let mut reader = stdin.lock();
-        let stdout = stdout();
+        let stdin = tokio::io::stdin();
+        let mut reader = BufReader::new(stdin);
+        let mut stdout = tokio::io::stdout();
 
+        let mut line = String::new();
         loop {
-            let mut line = String::new();
-            match reader.read_line(&mut line) {
+            line.clear();
+            match reader.read_line(&mut line).await {
                 Ok(0) => break, // EOF
                 Ok(_) => {
-                    let line = line.trim();
-                    if line.is_empty() {
+                    let trimmed = line.trim();
+                    if trimmed.is_empty() {
                         continue;
                     }
 
-                    let response = self.handle_request(line).await;
-                    let output = serde_json::to_string(&response)?;
-
-                    let mut out = stdout.lock();
-                    writeln!(out, "{}", output)?;
+                    if let Some(response) = self.handle_request(trimmed).await {
+                        let output = serde_json::to_string(&response)?;
+                        stdout.write_all(output.as_bytes()).await?;
+                        stdout.write_all(b"\n").await?;
+                        stdout.flush().await?;
+                    }
                 }
                 Err(e) => {
                     eprintln!("Error reading stdin: {}", e);
@@ -61,11 +63,11 @@ impl RulesMcpServer {
         Ok(())
     }
 
-    async fn handle_request(&self, line: &str) -> JsonRpcResponse {
+    async fn handle_request(&self, line: &str) -> Option<JsonRpcResponse> {
         let req: JsonRpcRequest = match serde_json::from_str(line) {
             Ok(r) => r,
             Err(e) => {
-                return JsonRpcResponse {
+                return Some(JsonRpcResponse {
                     jsonrpc: "2.0".to_string(),
                     id: None,
                     result: None,
@@ -74,9 +76,12 @@ impl RulesMcpServer {
                         message: "Parse error".to_string(),
                         data: Some(e.to_string()),
                     }),
-                };
+                });
             }
         };
+
+        // Notifications have no id and should not get a response
+        let is_notification = req.id.is_none() || req.method.starts_with("notifications/");
 
         let result = match req.method.as_str() {
             "tools/list" => self.list_tools().await,
@@ -85,14 +90,19 @@ impl RulesMcpServer {
             _ => Err(anyhow!("Unknown method: {}", req.method)),
         };
 
+        if is_notification {
+            // Silently handle notifications, no response
+            return None;
+        }
+
         match result {
-            Ok(value) => JsonRpcResponse {
+            Ok(value) => Some(JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
                 id: req.id,
                 result: Some(value),
                 error: None,
-            },
-            Err(e) => JsonRpcResponse {
+            }),
+            Err(e) => Some(JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
                 id: req.id,
                 result: None,
@@ -101,7 +111,7 @@ impl RulesMcpServer {
                     message: "Internal error".to_string(),
                     data: Some(e.to_string()),
                 }),
-            },
+            }),
         }
     }
 
@@ -206,7 +216,14 @@ impl RulesMcpServer {
                     .iter()
                     .filter_map(|v| v.as_str())
                     .collect();
-                self.get_context(&languages).await
+                let topics: Vec<&str> = arguments
+                    .get("topics")
+                    .and_then(|v| v.as_array())
+                    .unwrap_or(&default_arr)
+                    .iter()
+                    .filter_map(|v| v.as_str())
+                    .collect();
+                self.get_context(&languages, &topics).await
             }
             "get_learning_path" => {
                 let default_arr = vec![];

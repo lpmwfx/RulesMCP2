@@ -1,0 +1,45 @@
+#!/usr/bin/env rules-project
+
+# PHASES — RulesMCP Release History
+
+## Phase 1: Scaffolding + Core Logic (COMPLETED — 2026-03-19)
+
+**Duration:** Initial implementation
+**Outcome:** ✅ Core Registry, Adapter, Repository management ready
+
+- Ported Registry from Python to Rust (search, learning_path, filtering)
+- Implemented all 7 tool methods in adapter layer
+- Repository management with git2 (clone + cache)
+- Project structure with layer-tagged modules (_core, _adp, _x)
+
+## Phase 2: MCP Integration + Bug Fixes (COMPLETED — 2026-03-19)
+
+**Duration:** Integration and stabilization
+**Outcome:** ✅ Fully functional JSON-RPC MCP server, 7 critical bugs fixed
+
+### Critical Bugs Fixed
+1. **Tracing to stdout** — logs now go to stderr only (JSON-RPC safe)
+2. **stdlib core shadowing** — corrected module imports
+3. **Blocking I/O** — migrated to tokio async I/O
+4. **Notifications error handling** — no responses sent for notification-only requests
+5. **Stale cache** — git fetch + hard reset on startup
+6. **get_context filter** — fixed category matching + added topics parameter support
+7. **help() statistics** — now shows RULE/BANNED marker counts
+
+### Verification
+- ✅ `cargo build --release` compiles cleanly
+- ✅ `cargo test` passes
+- ✅ JSON-RPC initialize request returns clean response
+- ✅ help() displays 290 rules, 25 categories, 1400 RULE + 589 BANNED markers
+- ✅ Logs to stderr, no JSON-RPC corruption
+
+## Phase 3: Testing & Deployment (TODO)
+
+**Goals:** Publishing + Integration with Claude Code
+
+- [ ] Full MCP compliance test suite
+- [ ] Push to GitHub lpmwfx/RulesMCP
+- [ ] `cargo install --git` from GitHub
+- [ ] Claude Code MCP config update
+- [ ] Replace Python rules-mcp with Rust version
+- [ ] Verify all 7 tools available in Claude Code

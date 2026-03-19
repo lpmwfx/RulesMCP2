@@ -19,10 +19,18 @@ impl RulesMcpServer {
         let total_rules = registry.entries.len();
         let cats = registry.categories();
 
+        // Count RULE and BANNED markers across all entries
+        let total_rule_markers: usize = registry.entries.iter()
+            .map(|e| e.rules.len())
+            .sum();
+        let total_banned_markers: usize = registry.entries.iter()
+            .map(|e| e.banned.len())
+            .sum();
+
         format!(
             r#"# RulesMCP — AI coding standards lookup (Rust)
 
-**{}** rules across **{}** categories
+**{}** rules across **{}** categories ({} RULE markers, {} BANNED markers)
 
 ## Tools
 
@@ -49,6 +57,8 @@ impl RulesMcpServer {
 "#,
             total_rules,
             cats.len(),
+            total_rule_markers,
+            total_banned_markers,
             cats.join(", ")
         )
     }
@@ -89,15 +99,28 @@ impl RulesMcpServer {
         }
     }
 
-    /// Get combined rules context for given languages.
-    pub async fn get_context(&self, languages: &[&str]) -> String {
+    /// Get combined rules context for given languages and optional topics.
+    pub async fn get_context(&self, languages: &[&str], topics: &[&str]) -> String {
         let registry = self.registry.lock().await;
         let matched = registry
             .list_files(None)
             .into_iter()
             .filter(|e| {
-                languages.contains(&e.category.as_str())
-                    || languages.contains(&"global")
+                // Match by language or category == "global"
+                let lang_match = languages.contains(&e.category.as_str())
+                    || e.category == "global";
+
+                // Match by topics if provided
+                let topic_match = if topics.is_empty() {
+                    true
+                } else {
+                    topics.iter().any(|t| {
+                        e.concepts.contains(&t.to_string())
+                            || e.tags.contains(&t.to_string())
+                    })
+                };
+
+                lang_match && (topics.is_empty() || topic_match)
             })
             .collect::<Vec<_>>();
 

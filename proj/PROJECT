@@ -7,7 +7,7 @@
 Name:    RulesMCP
 Purpose: Model Context Protocol server for AI coding rules lookup (Rust port of Python rules-mcp)
 Owner:   lpmwfx
-Phase:   1 (early development — scaffolded, core logic ported)
+Phase:   2 (MCP integration complete, 7 critical bugs fixed, ready for deployment testing)
 
 ## Repos
 
@@ -61,23 +61,36 @@ AI agent / Claude Code
 
 ## Current Phase
 
-**Phase 1: Scaffolding + Core Logic**
+**Phase 2: MCP Integration + Bug Fixes (COMPLETE — 2026-03-19)**
 
+✅ **Core Logic:**
 - [x] Scaffold Rust CLI project with topology (shared, core, adapter)
 - [x] Port Registry from Python to Rust (register.jsonl loading, search scoring, learning_path)
-- [x] Port repo.rs (Rules repo cloning via git2)
-- [x] Implement adapter with all 7 tool methods (non-MCP)
-- [ ] Integrate rmcp SDK for stdio MCP server
-- [ ] Test with Claude Code
-- [ ] Publish to GitHub + crates.io
+- [x] Port repo.rs (Rules repo cloning via git2, with fetch + update)
+- [x] Implement adapter with all 7 tool methods
 
-## Next: MCP Integration
+✅ **MCP Server:**
+- [x] Custom JSON-RPC stdio server (clean, efficient, no external SDK)
+- [x] Tool list + tool call handling with parameter parsing
+- [x] Async I/O (tokio, no blocking operations)
+- [x] Proper notification handling (no error responses)
 
-Integrate `rmcp::Server` with the 7 tool methods in adapter.rs:
-1. Define Tool structs for each tool
-2. Implement CallToolHandler
-3. Bind to stdio transport
-4. Test with actual Claude Code MCP integration
+✅ **Bug Fixes (7 critical issues resolved):**
+1. [x] Tracing to stderr (JSON-RPC safe)
+2. [x] Correct module imports (no stdlib shadowing)
+3. [x] Async I/O (no tokio thread blocking)
+4. [x] Notification handling (proper silence)
+5. [x] Git updates (fetch + reset on startup)
+6. [x] get_context filtering (topics support)
+7. [x] help() statistics (marker counts)
+
+## Next: Phase 3 — Deployment
+
+1. Push to GitHub (lpmwfx/RulesMCP)
+2. Install: `cargo install --git https://github.com/lpmwfx/RulesMCP rules-mcp`
+3. Update Claude Code mcp-servers.json
+4. Verify all 7 tools available
+5. Retire Python rules-mcp (`pip uninstall rules-mcp`)
 
 ## Constraints
 

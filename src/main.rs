@@ -5,15 +5,16 @@ mod server;
 mod shared;
 
 use anyhow::Result;
-use core::Registry_core;
+use crate::core::Registry_core;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
+    // Initialize logging to stderr (keep stdout for JSON-RPC)
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_max_level(tracing::Level::INFO)
         .with_env_filter(
             tracing_subscriber::EnvFilter::from_default_env()
