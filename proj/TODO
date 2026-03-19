@@ -17,17 +17,19 @@
 - [x] Bug 6: get_context filter bug — fixed `|| e.category == "global"` and added topics parameter
 - [x] Bug 7: help() missing stats — added RULE/BANNED marker counting
 
-### Testing & Publishing (TODO)
-- [ ] Verify server with full MCP test suite
-- [ ] Push to GitHub (lpmwfx/RulesMCP)
-- [ ] Install via `cargo install --git https://github.com/lpmwfx/RulesMCP rules-mcp`
-- [ ] Update Claude Code mcp-servers.json config
-- [ ] Uninstall Python rules-mcp (`pip uninstall rules-mcp`)
-- [ ] Verify Claude Code tools work: `mcp__rules__help`, `mcp__rules__search_rules`, etc.
+### Testing & Publishing (DONE — 2026-03-19)
+- [x] Push to GitHub (lpmwfx/RulesMCP2 — commit efd859d)
+- [x] Install via `cargo install --git https://github.com/lpmwfx/RulesMCP2`
+- [x] Update Claude Code mcp-servers.json config (mcp-proxy)
+- [x] Verify MCP server loaded (mcp__mcp-proxy__mcp_load shows "already loaded")
 
-### Polish (TODO)
+### Cleanup (TODO)
+- [ ] Uninstall Python rules-mcp (`pip uninstall rulestools-mcp`)
+- [ ] Verify no old Python tools remain in Claude Code
+
+### Polish (Optional)
 - [ ] Add comprehensive unit tests
-- [ ] Publish to crates.io (optional)
+- [ ] Publish to crates.io
 - [ ] Full documentation
 
 ## Known Issues
