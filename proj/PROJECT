@@ -1,0 +1,86 @@
+#!/usr/bin/env rules-project
+
+# PROJECT: RulesMCP — Rust MCP Server
+
+## Identity
+
+Name:    RulesMCP
+Purpose: Model Context Protocol server for AI coding rules lookup (Rust port of Python rules-mcp)
+Owner:   lpmwfx
+Phase:   1 (early development — scaffolded, core logic ported)
+
+## Repos
+
+| Dir | GitHub | Package | Type |
+|---|---|---|---|
+| `RulesMCP/` | lpmwfx/RulesMCP | `rules-mcp` | Rust CLI (MCP server) |
+
+Parent: D:\REPO\Rules-dev\ (superprojekt)
+
+## Stack
+
+Language:  Rust 2021
+Runtime:   tokio async
+MCP:       rmcp 0.3 (official Rust SDK)
+Platform:  Linux/BSD, macOS, Windows (via Git)
+Package:   cargo install --git https://github.com/lpmwfx/RulesMCP rules-mcp
+
+## Architecture
+
+```
+AI agent / Claude Code
+    │
+    └─ rules-mcp (stdio MCP server)
+           │
+           ├─ Registry (in-memory register.jsonl index)
+           │  ├─ search() — token-based scoring
+           │  ├─ list_files() — category filtering
+           │  └─ learning_path() — layer grouping
+           │
+           └─ Adapter (7 MCP tools)
+              ├─ help
+              ├─ search_rules
+              ├─ get_rule
+              ├─ get_context
+              ├─ get_learning_path
+              ├─ list_rules
+              └─ get_related
+```
+
+## Tools (7 total)
+
+| Tool | Layer | Purpose |
+|------|-------|---------|
+| `help` | adapter | Overview + categories + quick start |
+| `search_rules(query, category?, limit?)` | adapter | Token-based weighted search |
+| `get_rule(file)` | adapter | Read markdown from Rules repo |
+| `get_context(languages, topics?)` | adapter | All rules for languages |
+| `get_learning_path(languages, phase?)` | adapter | Phased reading order by layer |
+| `list_rules(category?)` | adapter | Category-filtered listing |
+| `get_related(file)` | adapter | Follow edge graph (requires/feeds/related) |
+
+## Current Phase
+
+**Phase 1: Scaffolding + Core Logic**
+
+- [x] Scaffold Rust CLI project with topology (shared, core, adapter)
+- [x] Port Registry from Python to Rust (register.jsonl loading, search scoring, learning_path)
+- [x] Port repo.rs (Rules repo cloning via git2)
+- [x] Implement adapter with all 7 tool methods (non-MCP)
+- [ ] Integrate rmcp SDK for stdio MCP server
+- [ ] Test with Claude Code
+- [ ] Publish to GitHub + crates.io
+
+## Next: MCP Integration
+
+Integrate `rmcp::Server` with the 7 tool methods in adapter.rs:
+1. Define Tool structs for each tool
+2. Implement CallToolHandler
+3. Bind to stdio transport
+4. Test with actual Claude Code MCP integration
+
+## Constraints
+
+- D: drive dev-only — production installs from GitHub
+- No local-path dependencies — `cargo install --git` only
+- Rules repo is cloned to `~/.cache/rules-mcp/Rules/` (platformdirs)

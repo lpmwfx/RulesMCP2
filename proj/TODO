@@ -1,0 +1,39 @@
+# TODO — RulesMCP
+
+## Phase 1: Core Logic + Scaffolding (active)
+
+### Core Registry (DONE)
+- [x] Registry_core struct with entries loaded from register.jsonl
+- [x] search() with token-based weighted scoring
+- [x] learning_path() with layer grouping
+- [x] find_by_file(), list_files(), categories()
+
+### Adapter Layer (DONE)
+- [x] All 7 tool method implementations (help, search_rules, get_rule, etc.)
+- [x] Async-safe with Arc<Mutex<Registry>>
+
+### Repository Management (DONE)
+- [x] ensure_repo() clones Rules from GitHub
+- [x] Cache in ~/.cache/rules-mcp/Rules/
+
+### MCP Integration (TODO)
+- [ ] Integrate rmcp::Server with stdio transport
+- [ ] Define Tool structs for each of 7 tools
+- [ ] Implement CallToolHandler
+- [ ] Test with `cargo run`
+
+### Testing & Publishing (TODO)
+- [ ] Manual test with Claude Code
+- [ ] Push to GitHub (lpmwfx/RulesMCP)
+- [ ] Publish to crates.io
+- [ ] Update mcp-servers.json to use Rust rules-mcp.exe
+
+### Polish (TODO)
+- [ ] Add proj/RULES with Rust CLI rules
+- [ ] Add proj/FIXES for known issues
+- [ ] Add proj/PHASES for release tracking
+- [ ] .gitignore, LICENSE (EUPL-1.2)
+
+## Known Issues
+
+None yet.

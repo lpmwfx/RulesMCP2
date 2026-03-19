@@ -1,0 +1,54 @@
+# RulesMCP — Active Rules
+
+## Languages detected
+- Rust (RulesMCP binary)
+- Bash (install scripts)
+
+## Active Rust CLI Rules
+
+### Global
+- `global/startup.md` — mandatory session checklist
+- `global/initialize.md` — project init sequence
+- `global/topology.md` — layer-tag type naming (_adp/_core/_x etc.)
+- `global/file-limits.md` — file size limits (max 2000 lines per file)
+- `global/nesting.md` — brace depth limits (max 5)
+- `global/tech-debt.md` — no TODO/FIXME/HACK comments
+
+### Rust
+- `rust/README.md` — Modern Rust 2021 idioms, Result types, no panic in lib code
+- `rust/modules.md` — one module per file (no nested mod blocks)
+- `rust/docs.md` — `///` doc comments required on all pub items
+- `rust/errors.md` — Result + thiserror, no unwrap
+- `rust/naming.md` — layer-tag suffix (_core/_adp/_x), bool prefix is_/has_
+- `rust/constants.md` — no magic numbers, use named consts
+- `rust/ownership.md` — Arc/Rc, clone-spam awareness
+- `rust/threading.md` — no fire-and-forget, tokio::spawn comment
+
+## MCP Tools Topology
+
+| Layer | Module | Type |
+|-------|--------|------|
+| app | main.rs | Entry point, bootstrap |
+| adapter | adapter.rs | MCP tools, interface |
+| core | core.rs | Registry, search, scoring |
+| shared | shared.rs | Entry_x, types, utils |
+| pal | repo.rs | Git ops, cache dir |
+
+## Naming Convention
+
+Public types carry layer suffix:
+- `Registry_core` — core layer
+- `RulesMcpServer` (adapter) — note: struct, no suffix required for impl block names
+- `Entry_x` — shared layer
+- Types in main.rs have no suffix (entry point is exempt)
+
+## Testing Strategy
+
+- Unit tests for Registry_core (search, learning_path)
+- Integration test: load register.jsonl, verify entry count
+- Manual test: `cargo run` → registry loads successfully
+- MCP test: start server, test tool calls via stdio
+
+## Pre-Commit Checks
+
+None enforced yet (project in Phase 1).
