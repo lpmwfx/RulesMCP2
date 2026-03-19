@@ -107,3 +107,12 @@ EUPL-1.2 © 2024 TwistedBrain
 - **Rules**: https://github.com/lpmwfx/Rules (290 markdown rule files)
 - **RulesTools**: https://github.com/lpmwfx/RulesTools (Scanner + documenter in Rust)
 - **Original (Python)**: https://github.com/lpmwfx/RulesMCP (deprecated, use Rust version)
+
+
+---
+
+<!-- LARS:START -->
+<a href="https://lpmathiasen.com">
+  <img src="https://carousel.lpmathiasen.com/carousel.svg?slot=4" alt="Lars P. Mathiasen"/>
+</a>
+<!-- LARS:END -->
